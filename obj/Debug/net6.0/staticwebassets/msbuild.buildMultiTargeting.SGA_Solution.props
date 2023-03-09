@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\SGA_Solution.props" />
+</Project>

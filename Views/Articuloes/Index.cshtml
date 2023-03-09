@@ -1,0 +1,58 @@
+﻿@model IEnumerable<SGA_Solution.Models.Articulo>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Artículos</h1>
+
+<p>
+    <a asp-action="Create">Registrar Artículo</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Código
+            </th>
+            <th>
+                Artículo
+            </th>
+            <th>
+                Cantidad en Stock
+            </th>
+            <th>
+                Precio Unitario
+            </th>
+            <th>
+                Caducidad
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Codigo)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Nombre)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Stock)
+            </td>
+            <td>
+                $@Html.DisplayFor(modelItem => item.PrecioU)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Caducidad)
+            </td>
+            <td>
+                    <p><a asp-action="Edit" asp-route-id="@item.Id">Editar</a></p>
+                    <p><a asp-action="Delete" asp-route-id="@item.Id">Eliminar</a></p>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
