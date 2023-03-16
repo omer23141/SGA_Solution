@@ -1,0 +1,394 @@
+﻿@*@model MyViewModelEntrada
+
+@{
+    ViewData["Title"] = "RegistrarA";
+}
+
+<h1>RegistrarA</h1>
+
+@if (ViewData.ModelState.IsValid)
+{
+    <p></p>
+}
+else
+{
+    <p>Se han producido errores al guardar los datos.</p>
+}
+
+<form asp-action="RegistrarA">
+    <div class="form-group">
+        <label asp-for="Movimiento.Referencia" class="control-label"></label>
+        <input asp-for="Movimiento.Referencia" class="form-control" />
+        <span asp-validation-for="Movimiento.Referencia" class="text-danger"></span>
+    </div>
+    
+    <div class="form-group">
+        <label asp-for="Entrada.Proveedor" class="control-label"></label>
+        <input asp-for="Entrada.Proveedor" class="form-control" />
+        <span asp-validation-for="Entrada.Proveedor" class="text-danger"></span>
+    </div>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Ref</th>
+                <th>Código</th>
+                <th>Nombre Artículo</th>
+                <th>Cantidad</th>
+                <th>Costo Unitario</th>
+                <th>Total</th>
+                <th>Caducidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="form-group">
+                        <input asp-for="Entrada.MovimientoR" class="form-control" />
+                        <span asp-validation-for="Entrada.MovimientoR" class="text-danger"></span>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <input asp-for="Entrada.CodigoA" class="form-control" id="codigoArticulo" />
+                        <span asp-validation-for="Entrada.CodigoA" class="text-danger"></span>
+                        <button type="button" class="btn btn-primary" onclick="buscarArticulo()" data-url="@Url.Action("BuscarArticulo", "Articuloes")">Buscar</button>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <input asp-for="NombreArticulo" class="form-control" id="NombreArticulo" readonly />
+                        <span asp-validation-for="NombreArticulo" class="text-danger"></span>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <input asp-for="Entrada.Cantidad" class="form-control" min="1" id="cantidad-input" />
+                        <span asp-validation-for="Entrada.Cantidad" class="text-danger"></span>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">$</span>
+                            <input asp-for="Entrada.CostoU" class="form-control" min="0" id="costoU-input" />
+                        </div>
+                        <span asp-validation-for="Entrada.CostoU" class="text-danger"></span>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">$</span>
+                            <input asp-for="Entrada.Total" class="form-control" id="total-input" disabled />
+                        </div>
+                        <span asp-validation-for="Entrada.Total" class="text-danger"></span>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <input asp-for="Entrada.Caducidad" class="form-control" type="date" />
+                        <span asp-validation-for="Entrada.Caducidad" class="text-danger"></span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <div class="form-group">
+        <label asp-for="Movimiento.Total" class="control-label"></label>
+        <input asp-for="Movimiento.Total" class="form-control" />
+        <span asp-validation-for="Movimiento.Total" class="text-danger"></span>
+    </div>
+    <div class="form-group" style="display:none;">
+        <label asp-for="Movimiento.Tipo" class="control-label"></label>
+        <input asp-for="Movimiento.Tipo" class="form-control" value="Entrada" />
+        <span asp-validation-for="Movimiento.Tipo" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+</form>
+
+<script>
+    const cantidadInput = document.getElementById('cantidad-input');
+    const costoUInput = document.getElementById('costoU-input');
+    const totalInput = document.getElementById('total-input');
+
+    function actualizarTotal() {
+        const cantidad = cantidadInput.value;
+        const costoU = costoUInput.value;
+        const total = cantidad * costoU;
+        totalInput.value = total.toFixed(2);
+    }
+
+    cantidadInput.addEventListener('input', actualizarTotal);
+    costoUInput.addEventListener('input', actualizarTotal);
+</script>
+<script>
+    function buscarArticulo() {
+        var codigoArticulo = document.getElementById("codigoArticulo").value;
+        var url = document.querySelector("[data-url]").getAttribute("data-url");
+
+        $.ajax({
+            type: "GET",
+            url: url,
+            data: { codigo: codigoArticulo },
+            success: function (data) {
+                if (data.nombreArticulo) {
+                    document.getElementById("NombreArticulo").value = data.nombreArticulo;
+                } else {
+                    document.getElementById("NombreArticulo").value = "";
+                    alert("El artículo no fue encontrado.");
+                }
+            },
+            error: function (xhr, status, error) {
+                alert("Se ha producido un error al buscar el artículo.");
+            }
+        });
+    }
+
+</script>
+<script>>
+        function guardarEntrada() {
+            $.ajax({
+                type: 'POST',
+                url: '/Entradas/RegistrarA',
+                data: $('form').serialize(),
+                success: function (result) {
+                    var codigo = $('#codigoArticulo').val();
+                    var cantidad = $('#entrada_Cantidad').val();
+                    $.ajax({
+                        type: 'POST',
+                        url: '/Articulos/ActualizarStock',
+                        data: { codigo: codigo, cantidad: cantidad },
+                        success: function (result) {
+                            location.reload();
+                        },
+                        error: function () {
+                            alert('Ha ocurrido un error al actualizar el stock del artículo.');
+                        }
+                    });
+                },
+                error: function () {
+                    alert('Ha ocurrido un error al guardar la entrada.');
+                }
+            });
+        }
+</script>
+
+<script>
+    const cantidadInput = document.getElementById('cantidad-input');
+    const costoUInput = document.getElementById('costoU-input');
+    const totalInput = document.getElementById('total-input');
+
+    function actualizarTotal() {
+        const cantidad = cantidadInput.value;
+        const costoU = costoUInput.value;
+        const total = cantidad * costoU;
+        totalInput.value = total.toFixed(2);
+    }
+
+    cantidadInput.addEventListener('input', actualizarTotal);
+    costoUInput.addEventListener('input', actualizarTotal);
+</script>
+<script>
+    function buscarArticulo() {
+        var codigoArticulo = document.getElementById("codigoArticulo").value;
+        var url = document.querySelector("[data-url]").getAttribute("data-url");
+
+        $.ajax({
+            type: "GET",
+            url: url,
+            data: { codigo: codigoArticulo },
+            success: function (data) {
+                if (data.nombreArticulo) {
+                    document.getElementById("NombreArticulo").value = data.nombreArticulo;
+                } else {
+                    document.getElementById("NombreArticulo").value = "";
+                    alert("El artículo no fue encontrado.");
+                }
+            },
+            error: function (xhr, status, error) {
+                alert("Se ha producido un error al buscar el artículo.");
+            }
+        });
+    }
+
+</script>
+<script>
+    >
+        function guardarEntrada() {
+            $.ajax({
+                type: 'POST',
+                url: '/Entradas/RegistrarA',
+                data: $('form').serialize(),
+                success: function (result) {
+                    var codigo = $('#codigoArticulo').val();
+                    var cantidad = $('#entrada_Cantidad').val();
+                    $.ajax({
+                        type: 'POST',
+                        url: '/Articulos/ActualizarStock',
+                        data: { codigo: codigo, cantidad: cantidad },
+                        success: function (result) {
+                            location.reload();
+                        },
+                        error: function () {
+                            alert('Ha ocurrido un error al actualizar el stock del artículo.');
+                        }
+                    });
+                },
+                error: function () {
+                    alert('Ha ocurrido un error al guardar la entrada.');
+                }
+            });
+        }
+</script>
+*@
+
+@model MyViewModelEntrada
+
+<h1>Registrar Entrada</h1>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        <label asp-for="Movimiento.Referencia" class="control-label"></label>
+        <input asp-for="Movimiento.Referencia" class="form-control" />
+        <span asp-validation-for="Movimiento.Referencia" class="text-danger"></span>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Referencia</th>
+                <th>Proveedor</th>
+                <th>Cantidad</th>
+                <th>Costo Unitario</th>
+                <th>Sub-total</th>
+                <th>Caducidad</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (var i = 0; i < Model.Entradas.Count; i++)
+            {
+                <tr>
+                    <td>
+                        @Html.HiddenFor(m => m.Entradas[i].Id)
+                        @Html.TextBoxFor(m => m.Entradas[i].CodigoA, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Entradas[i].CodigoA, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.Entradas[i].MovimientoR, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Entradas[i].MovimientoR, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.Entradas[i].Proveedor, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Entradas[i].Proveedor, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.Entradas[i].Cantidad, new { @class = "form-control", oninput = "actualizarTotal(this); actualizarTotal2(this)" })
+                        @Html.ValidationMessageFor(m => m.Entradas[i].Cantidad, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.Entradas[i].CostoU, new { @class = "form-control", oninput = "actualizarTotal(this); actualizarTotal2(this)" })
+                        @Html.ValidationMessageFor(m => m.Entradas[i].CostoU, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.Entradas[i].Total, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Entradas[i].Total, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.Entradas[i].Caducidad, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Entradas[i].Caducidad, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger" onclick="eliminarFila(this)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="form-group">
+        <label asp-for="Movimiento.Total" class="control-label"></label>
+        <input asp-for="Movimiento.Total" id="total-input" class="form-control" readonly />
+        <span asp-validation-for="Movimiento.Total" class="text-danger"></span>
+    </div>
+    <div class="form-group" style="display:none;">
+        <label asp-for="Movimiento.Tipo" class="control-label"></label>
+        <input asp-for="Movimiento.Tipo" class="form-control" value="Entrada" />
+        <span asp-validation-for="Movimiento.Tipo" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <button type="button" class="btn btn-success" onclick="agregarEntrada()">Agregar Entrada</button>
+    </div>
+
+    <div class="form-group">
+        <input type="submit" value="Registrar" class="btn btn-primary" />
+    </div>
+}
+
+@section scripts {
+    <script>
+        function agregarEntrada() {
+            var table = document.querySelector('table');
+            var row = table.insertRow(table.rows.length - 1);
+            var codigoCell = row.insertCell(0);
+            var referenciaCell = row.insertCell(1);
+            var proveedorCell = row.insertCell(2);
+            var cantidadCell = row.insertCell(3);
+            var costoUCell = row.insertCell(4);
+            var totalCell = row.insertCell(5);
+            var caducidadCell = row.insertCell(6);
+            var eliminarCell = row.insertCell(7);
+            codigoCell.innerHTML = '<input type="text" name="entradas[' + (table.rows.length - 2) + '].CodigoA" class="form-control" />';
+            referenciaCell.innerHTML = '<input type="text" name="entradas[' + (table.rows.length - 2) + '].MovimientoR" class="form-control" />';
+            proveedorCell.innerHTML = '<input type="text" name="entradas[' + (table.rows.length - 2) + '].Proveedor" class="form-control" />';
+            cantidadCell.innerHTML = '<input type="number" min="1" name="entradas[' + (table.rows.length - 2) + '].Cantidad" class="form-control" oninput = "actualizarTotal(this); actualizarTotal2(this)"/>';
+            costoUCell.innerHTML = '<input type="number" min="0" step="0.01" name="entradas[' + (table.rows.length - 2) + '].CostoU" class="form-control" oninput = "actualizarTotal(this); actualizarTotal2(this)" />';
+            totalCell.innerHTML = '<input type="number" min="0" step="0.01" name="entradas[' + (table.rows.length - 2) + '].Total" class="form-control" readonly />';
+            caducidadCell.innerHTML = '<input type="date" name="entradas[' + (table.rows.length - 2) + '].Caducidad" class="form-control" />';
+            eliminarCell.innerHTML = '<button type="button" class="btn btn-danger" onclick="eliminarFila(this)">Eliminar</button>';
+
+        }
+    </script>
+    <script>
+        function eliminarFila(btn) {
+            var row = btn.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            actualizarTotal2();
+        }
+    </script>
+    <script>
+        function actualizarTotal(input) {
+            var fila = input.parentNode.parentNode;
+            var cantidad = fila.cells[3].querySelector('input').value;
+            var costoU = fila.cells[4].querySelector('input').value;
+            var total = fila.cells[5].querySelector('input');
+
+            total.value = (cantidad * costoU).toFixed(2);
+        }
+    </script>
+    <script>
+        function actualizarTotal2() {
+            var total = 0;
+            var table = document.querySelector('table');
+            for (var i = 0; i < table.rows.length - 1; i++) {
+                var cantidad = parseFloat(table.rows[i].cells[3].querySelector('input').value);
+                var costoU = parseFloat(table.rows[i].cells[4].querySelector('input').value);
+                var subtotal = cantidad * costoU;
+                if (!isNaN(subtotal)) {
+                    total += subtotal;
+                }
+            }
+            document.getElementById('total-input').value = total.toFixed(2);
+        }
+
+    </script>
+}
+

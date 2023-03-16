@@ -1,0 +1,140 @@
+﻿@model MyViewModelSalida
+
+<h1>Registrar Salida</h1>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        <label asp-for="Movimiento.Referencia" class="control-label"></label>
+        <input asp-for="Movimiento.Referencia" class="form-control" />
+        <span asp-validation-for="Movimiento.Referencia" class="text-danger"></span>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Referencia</th>
+                <th>Cliente</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Sub-total</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (var i = 0; i < Model.Salidas.Count; i++)
+            {
+                <tr>
+                    <td>
+                        @Html.HiddenFor(m => m.Salidas[i].Id)
+                        @Html.TextBoxFor(m => m.Salidas[i].CodigoA, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Salidas[i].CodigoA, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.Salidas[i].MovimientoR, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Salidas[i].MovimientoR, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.Salidas[i].Cliente, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Salidas[i].Cliente, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.Salidas[i].Cantidad, new { @class = "form-control", oninput = "actualizarTotal(this); actualizarTotal2(this)" })
+                        @Html.ValidationMessageFor(m => m.Salidas[i].Cantidad, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.Salidas[i].PrecioU, new { @class = "form-control", oninput = "actualizarTotal(this); actualizarTotal2(this)" })
+                        @Html.ValidationMessageFor(m => m.Salidas[i].PrecioU, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(m => m.Salidas[i].Total, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Salidas[i].Total, "", new { @class = "text-danger" })
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger" onclick="eliminarFila(this)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="form-group">
+        <label asp-for="Movimiento.Total" class="control-label"></label>
+        <input asp-for="Movimiento.Total" id="total-input" class="form-control" readonly />
+        <span asp-validation-for="Movimiento.Total" class="text-danger"></span>
+    </div>
+    <div class="form-group" style="display:none;">
+        <label asp-for="Movimiento.Tipo" class="control-label"></label>
+        <input asp-for="Movimiento.Tipo" class="form-control" value="Salida" />
+        <span asp-validation-for="Movimiento.Tipo" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <button type="button" class="btn btn-success" onclick="agregarSalida()">Agregar Salida</button>
+    </div>
+
+    <div class="form-group">
+        <input type="submit" value="Registrar" class="btn btn-primary" />
+    </div>
+}
+
+@section scripts {
+    <script>
+        function agregarSalida() {
+            var table = document.querySelector('table');
+            var row = table.insertRow(table.rows.length - 1);
+            var codigoCell = row.insertCell(0);
+            var referenciaCell = row.insertCell(1);
+            var clienteCell = row.insertCell(2);
+            var cantidadCell = row.insertCell(3);
+            var precioUCell = row.insertCell(4);
+            var totalCell = row.insertCell(5);
+            var eliminarCell = row.insertCell(6);
+            codigoCell.innerHTML = '<input type="text" name="salidas[' + (table.rows.length - 2) + '].CodigoA" class="form-control" />';
+            referenciaCell.innerHTML = '<input type="text" name="salidas[' + (table.rows.length - 2) + '].MovimientoR" class="form-control" />';
+            clienteCell.innerHTML = '<input type="text" name="salidas[' + (table.rows.length - 2) + '].Cliente" class="form-control" />';
+            cantidadCell.innerHTML = '<input type="number" min="1" name="salidas[' + (table.rows.length - 2) + '].Cantidad" class="form-control" oninput = "actualizarTotal(this); actualizarTotal2(this)"/>';
+            precioUCell.innerHTML = '<input type="number" min="0" step="0.01" name="salidas[' + (table.rows.length - 2) + '].PrecioU" class="form-control" oninput = "actualizarTotal(this); actualizarTotal2(this)" />';
+            totalCell.innerHTML = '<input type="number" min="0" step="0.01" name="salidas[' + (table.rows.length - 2) + '].Total" class="form-control" readonly />';
+            eliminarCell.innerHTML = '<button type="button" class="btn btn-danger" onclick="eliminarFila(this)">Eliminar</button>';
+
+        }
+    </script>
+    <script>
+        function eliminarFila(btn) {
+            var row = btn.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            actualizarTotal2();
+        }
+    </script>
+    <script>
+        function actualizarTotal(input) {
+            var fila = input.parentNode.parentNode;
+            var cantidad = fila.cells[3].querySelector('input').value;
+            var costoU = fila.cells[4].querySelector('input').value;
+            var total = fila.cells[5].querySelector('input');
+
+            total.value = (cantidad * costoU).toFixed(2);
+        }
+    </script>
+    <script>
+        function actualizarTotal2() {
+            var total = 0;
+            var table = document.querySelector('table');
+            for (var i = 0; i < table.rows.length - 1; i++) {
+                var cantidad = parseFloat(table.rows[i].cells[3].querySelector('input').value);
+                var costoU = parseFloat(table.rows[i].cells[4].querySelector('input').value);
+                var subtotal = cantidad * costoU;
+                if (!isNaN(subtotal)) {
+                    total += subtotal;
+                }
+            }
+            document.getElementById('total-input').value = total.toFixed(2);
+        }
+
+    </script>
+}
+

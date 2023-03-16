@@ -156,5 +156,19 @@ namespace SGA_Solution.Controllers
         {
           return _context.Articulos.Any(e => e.Id == id);
         }
+
+        [HttpGet]
+        public IActionResult BuscarArticulo(string codigo)
+        {
+            var articulo = _context.Articulos.SingleOrDefault(a => a.Codigo == codigo);
+
+            if (articulo != null)
+            {
+                return Json(new { nombreArticulo = articulo.Nombre });
+            }
+
+            return Json(new { });
+        }
+
     }
 }

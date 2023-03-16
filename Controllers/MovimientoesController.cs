@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -156,5 +157,112 @@ namespace SGA_Solution.Controllers
         {
           return _context.Movimientos.Any(e => e.Id == id);
         }
+
+        /*public IActionResult RegistrarA()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegistrarA([Bind("Id,Referencia, Tipo,Total,MovimientoR,Proveedor,CodigoA,Cantidad,CostoU,Caducidad")] Movimiento movimiento, Entrada entrada)
+        {
+            if (ModelState.IsValid)
+            {
+                var articulo = await _context.Articulos.SingleOrDefaultAsync(a => a.Codigo == entrada.CodigoA);
+                if (articulo != null)
+                {
+                    // Sumar la cantidad de la entrada al stock actual del artículo
+                    articulo.Stock += entrada.Cantidad;
+
+                    // Actualizar el artículo en la base de datos
+                    _context.Articulos.Update(articulo);
+                }
+                entrada.Fecha = DateTime.Now;
+                movimiento.Fecha = DateTime.Now;
+                _context.Add(movimiento);
+                _context.Add(entrada);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+
+            var viewModel = new MyViewModelEntrada()
+            {
+                Movimiento = movimiento,
+                Entrada = entrada
+            };
+
+            return View(viewModel);
+        }*/
+
+        public IActionResult RegistrarA()
+        {
+            var viewModel = new MyViewModelEntrada();
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegistrarA([Bind("Id,Referencia, Tipo,Total,MovimientoR,Proveedor")] Movimiento movimiento, List<Entrada> entradas)
+
+        {
+            foreach (var entrada in entradas)
+            {
+                if (ModelState.IsValid)
+                {
+                    var articulo = await _context.Articulos.SingleOrDefaultAsync(a => a.Codigo == entrada.CodigoA);
+                    if (articulo != null)
+                    {
+                        // Sumar la cantidad de la entrada al stock actual del artículo
+                        articulo.Stock += entrada.Cantidad;
+
+                        // Actualizar el artículo en la base de datos
+                        _context.Articulos.Update(articulo);
+                    }
+                    entrada.Fecha = DateTime.Now;
+                    movimiento.Fecha = DateTime.Now;
+                    _context.Add(movimiento);
+                    _context.Add(entrada);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        public IActionResult RegistrarS()
+        {
+            var viewModel = new MyViewModelSalida();
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegistrarS([Bind("Id,Referencia, Tipo,Total")] Movimiento movimiento, List<Salida> salidas)
+
+        {
+            foreach (var salida in salidas)
+            {
+                if (ModelState.IsValid)
+                {
+                    var articulo = await _context.Articulos.SingleOrDefaultAsync(a => a.Codigo == salida.CodigoA);
+                    if (articulo != null)
+                    {
+                        articulo.Stock -= salida.Cantidad;
+
+                        _context.Articulos.Update(articulo);
+                    }
+                    salida.Fecha = DateTime.Now;
+                    movimiento.Fecha = DateTime.Now;
+                    _context.Add(movimiento);
+                    _context.Add(salida);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
     }
 }
